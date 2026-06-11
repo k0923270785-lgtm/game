@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>崩壞：星穹鐵道 × Hololive 二創網頁中心</title>
+    <style>
+        :root {
+            --bg-color: #0b0e14;
+            --panel-bg: rgba(22, 28, 40, 0.85);
+            --text-color: #f0f3f8;
+            --ssr-color: #ffb13b;
+            --sr-color: #a974ff;
+            --cyan-color: #00f3ff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            /* background-image: url("space_bg.jpg"); */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            
+            color: var(--text-color);
+            font-family: "Microsoft JhengHei", sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--cyan-color);
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .status-bar {
+            background: var(--panel-bg);
+            border: 1px solid #2d384e;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            font-size: 16px;
+            backdrop-filter: blur(5px);
+        }
+
+        .container {
+            width: 850px;
+            min-height: 560px;
+            background: var(--panel-bg);
+            border: 2px solid #2d384e;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+
+        button, select {
+            background: #242f44;
+            color: white;
+            border: 1px solid #3f5175;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        select {
+            padding: 8px 15px;
+        }
+        button:hover {
+            background: #334361;
+            border-color: var(--cyan-color);
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+        }
+        button:disabled {
+            background: #111622;
+            color: #555;
+            border-color: #222;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .menu-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .scene { display: none; }
+        .scene.active { display: block; }
+
+        /* 卡池選擇面板 */
+        .banner-selector-box {
+            background: #131924;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--ssr-color);
+        }
+
+        .gacha-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #0f131c;
+            border-radius: 8px;
+            min-height: 120px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        .ssr-text { color: var(--ssr-color); font-weight: bold; }
+        .sr-text { color: var(--sr-color); font-weight: bold; }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .char-card {
+            background: #1f2736;
+            border: 1px solid #3f5175;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .char-card.SSR { border-color: var(--ssr-color); box-shadow: 0 0 5px rgba(255,177,59,0.2); }
+        .char-card.SR { border-color: var(--sr-color); }
+
+        .img-slot {
+            width: 120px;
+            height: 120px;
+            background: #2c364c;
+            margin: 0 auto 10px auto;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #aaa;
+            border: 1px dashed #556;
+            overflow: hidden;
+        }
+        .img-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .battle-grid {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            position: relative;
+        }
+        
+        .battle-unit-box {
+            width: 260px;
+            background: #131924;
+            border: 1px solid #2d384e;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+            transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.1s ease;
+        }
+
+        .battle-large-img {
+            width: 200px;
+            height: 200px;
+            background: #1b2230;
+            margin: 0 auto 15px auto;
+            border-radius: 8px;
+            border: 1px solid #334361;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #77849c;
+            overflow: hidden;
+        }
+        .battle-large-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .p-attack-move { transform: translateX(200px) scale(1.05); z-index: 5; }
+        .e-attack-move { transform: translateX(-200px) scale(1.05); z-index: 5; }
+        .hurt-flash { filter: brightness(1.5) sepia(1) hue-rotate(-50deg); }
+
+        .bar-container {
+            background: #222;
+            height: 18px;
+            border-radius: 9px;
+            margin: 10px 0;
+            overflow: hidden;
+            position: relative;
+        }
+        .hp-bar { height: 100%; width: 100%; transition: width 0.3s ease; }
+        .energy-bar { background: var(--ssr-color); height: 100%; width: 0%; transition: width 0.3s ease; }
+        .bar-text {
+            position: absolute; width: 100%; top: 0; left: 0;
+            font-size: 12px; line-height: 18px; color: white; font-weight: bold;
+        }
+        
+        .battle-vs-txt { font-size: 36px; font-weight: bold; color: #3f5175; }
+        .battle-actions { margin-top: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ult-btn { grid-column: span 2; border-color: var(--ssr-color) !important; color: var(--ssr-color) !important; }
+        .ult-btn:hover:not(:disabled) { background: rgba(255, 177, 59, 0.1) !important; box-shadow: 0 0 12px rgba(255, 177, 59, 0.4) !important; }
+        
+        .battle-log {
+            margin-top: 15px; background: #090d14; padding: 12px; border-radius: 6px;
+            height: 50px; overflow-y: auto; border-left: 4px solid var(--cyan-color); font-size: 14px;
+        }
+
+        #ult-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92); border-radius: 12px; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            color: var(--ssr-color); font-size: 32px; font-weight: bold; z-index: 10;
+            animation: shake 0.12s infinite;
+        }
+        @keyframes shake {
+            0% { transform: translate(2px, 1px) rotate(0deg); }
+            50% { transform: translate(-2px, -1px) rotate(-1deg); }
+            100% { transform: translate(1px, 2px) rotate(1deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>✨ 崩壞：星穹鐵道 × Hololive 二創網頁中心 ✨</h1>
+
+    <div class="status-bar">
+        <div>累積抽數 (Pity): <span id="stat-pity">0</span>/90</div>
+        <div>下次大保底 (Guaranteed): <span id="stat-guarantee">否 (NO)</span></div>
+        <div>戰技點 (SP): <span id="stat-sp">3/5</span></div>
+    </div>
+
+    <div class="menu-nav">
+        <button onclick="switchScene('gacha-scene')">🌌 躍遷召喚 (Warp)</button>
+        <button onclick="switchScene('inventory-scene'); renderInventory();">👥 角色名冊 (Inventory)</button>
+        <button onclick="switchScene('battle-scene'); initBattleSelect();">⚔️ 模擬宇宙戰鬥 (Battle)</button>
+    </div>
+
+    <div class="container">
+        <div id="ult-overlay">⚡ ULTIMATE ACTIVATED !! ⚡</div>
+
+        <!-- 1. 抽卡場景 -->
+        <div id="gacha-scene" class="scene active">
+            <h2>限定跨界跳躍：夢幻聯動</h2>
+            
+            <!-- 🎯 【新功能：多池切換選擇器】 -->
+            <div class="banner-selector-box">
+                <label for="banner-select"><b>請選擇當前限定躍遷活動卡池：</b></label>
+                <select id="banner-select" onchange="changeBanner()">
+                    <option value="0">櫻巫女 (Sakura Miko) - 限定機率 UP 池</option>
+                    <option value="1">星街彗星 (Hoshimachi Suisei) - 限定機率 UP 池</option>
+                    <option value="2">寶鐘瑪琳 (Houshou Marine) - 限定機率 UP 池</option>
+                </select>
+            </div>
+
+            <p>機率完全還原：★5機率0.6%（含90抽硬保底，50%機率歪常駐五星）。</p>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="doWarp(1)">進行單抽 Single Warp</button>
+                <button onclick="doWarp(10)">進行十連抽 10-Pull Warp</button>
+            </div>
+            <div class="gacha-result" id="gacha-output">等待列車開門...</div>
+        </div>
+
+        <!-- 2. 背包場景 -->
+        <div id="inventory-scene" class="scene">
+            <h2>已獲得的聯動角色</h2>
+            <div class="inventory-grid" id="inventory-output"></div>
+        </div>
+
+        <!-- 3. 戰鬥場景 -->
+        <div id="battle-scene" class="scene">
+            <h2>模擬宇宙挑戰面板</h2>
+            
+            <div id="battle-setup">
+                <!-- 👿 【新功能：更多樣化的敵方強敵清單】 -->
+                <label>選擇迎擊強敵：</label>
+                <select id="stage-select">
+                    <option value="easy">虛卒・踐踏者 (Easy)</option>
+                    <option value="medium">熾燃徘徊者 (Medium)</option>
+                    <option value="gepard">銀鬃鐵衛・杰帕德 (Hard - 高盾高血)</option>
+                    <option value="kafka">星核獵手・卡芙卡 (Expert - 超高攻擊)</option>
+                    <option value="hard">末日獸・碎星結晶 (BOSS - 終極挑戰)</option>
+                </select>
+                <br><br>
+                <label>選擇出戰編隊角色：</label>
+                <select id="char-select"></select>
+                <br><br>
+                <button onclick="startBattleGame()">進入開戰狀態 Enter Battle</button>
+            </div>
+
+            <!-- 核心動態戰鬥畫面 -->
+            <div id="battle-core" style="display: none;">
+                <div class="battle-grid">
+                    <div class="battle-unit-box" id="player-unit-box">
+                        <div class="battle-large-img" id="p-img-slot"><span>[角色立繪]</span></div>
+                        <h3 id="p-name">角色名</h3>
+                        <div class="bar-container">
+                            <div class="hp-bar" id="p-hp-bar" style="background: #4caf50;"></div>
+                            <div class="bar-text" id="p-hp-text">1000/1000</div>
+                        </div>
+                        <div class="bar-container">
+                            <div class="energy-bar" id="p-energy-bar"></div>
+                            <div class="bar-text" id="p-energy-text">0/100</div>
+                        </div>
+                    </div>
+
+                    <div class="battle-vs-txt">VS</div>
+
+                    <div class="battle-unit-box" id="enemy-unit-box">
+                        <div class="battle-large-img" id="e-img-slot"><span>[強敵巨圖]</span></div>
+                        <h3 id="e-name">強敵名</h3>
+                        <div class="bar-container">
+                            <div class="hp-bar" id="e-hp-bar" style="background: #f44336;"></div>
+                            <div class="bar-text" id="e-hp-text">600/600</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="battle-actions">
+                    <button onclick="executeAction('atk')">⚔️ 普通攻擊 (Basic ATK) [+1 SP] [+20 能量]</button>
+                    <button onclick="executeAction('skill')" id="btn-skill">🔥 釋放戰技 (Skill Attack) [-1 SP] [+30 能量]</button>
+                    <button onclick="executeAction('ult')" id="btn-ult" class="ult-btn" disabled>⚡ 終結技・奧義爆發 (ULTIMATE) [滿能量解鎖]</button>
+                </div>
+
+                <div class="battle-log" id="battle-log-text">等待指令下達...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let pityCounter = 0;
+        let isGuaranteed = false;
+        let currentSP = 3;
+        const maxSP = 5;
+        let playerInventory = [];
+        let currentBannerIdx = 0; // 追蹤當前玩家選哪一個池
+
+        // 5星角色庫：0是櫻巫女，1是星街，2是船長
+        const ssrPool = [
+            { name: "櫻巫女 (Sakura Miko)", rarity: "SSR", hp: 1050, maxHp: 1050, atk: 185, critRate: 0.25, critDmge: 2.1, img: "miko.png" },
+            { name: "星街彗星 (Hoshimachi Suisei)", rarity: "SSR", hp: 1100, maxHp: 1100, atk: 195, critRate: 0.20, critDmge: 2.0, img: "suisei.png" },
+            { name: "寶鐘瑪琳 (Houshou Marine)", rarity: "SSR", hp: 1150, maxHp: 1150, atk: 175, critRate: 0.15, critDmge: 1.8, img: "marine.png" }
+        ];
+
+        // 歪卡常駐SSR池（防止抽卡不小心歪到重複的UP角色）
+        const permanentSsrPool = [
+            { name: "瓦爾特 (Welt)", rarity: "SSR", hp: 1000, maxHp: 1000, atk: 150, critRate: 0.10, critDmge: 1.5, img: "welt.png" },
+            { name: "姬子 (Himeko)", rarity: "SSR", hp: 1050, maxHp: 1050, atk: 160, critRate: 0.12, critDmge: 1.6, img: "himeko.png" }
+        ];
+
+        const srPool = [
+            { name: "Gawr Gura (古拉)", rarity: "SR", hp: 920, maxHp: 920, atk: 130, critRate: 0.15, critDmge: 1.6, img: "gura.png" },
+            { name: "蒼風 (Zephyr)", rarity: "SR", hp: 900, maxHp: 900, atk: 110, critRate: 0.10, critDmge: 1.5, img: "zephyr.png" }
+        ];
+
+        let activeChar = null;
+        let activeEnemy = null;
+
+        function switchScene(sceneId) {
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            document.getElementById(sceneId).classList.add('active');
+        }
+
+        function updateTopStatus() {
+            document.getElementById('stat-pity').innerText = pityCounter;
+            document.getElementById('stat-guarantee').innerText = isGuaranteed ? "是 (YES)" : "否 (NO)";
+            document.getElementById('stat-sp').innerText = `${currentSP}/${maxSP}`;
+        }
+
+        function changeBanner() {
+            currentBannerIdx = parseInt(document.getElementById('banner-select').value);
+            document.getElementById('gacha-output').innerText = `已切換至【${ssrPool[currentBannerIdx].name}】限定躍遷卡池！`;
+        }
+
+        // 核心抽卡演算法（帶卡池切換與保底歪卡邏輯）
+        function rollGacha() {
+            pityCounter++;
+            let roll = Math.random() * 100;
+            
+            if (roll <= 0.6 || pityCounter >= 90) {
+                pityCounter = 0;
+                let upCharacter = ssrPool[currentBannerIdx]; // 當前卡池的UP星
+                
+                if (isGuaranteed) {
+                    // 大保底：必定獲得卡池UP角
+                    isGuaranteed = false;
+                    addCharacter(upCharacter);
+                    return `<span class="ssr-text">✨✨【金色流星！大保底】★5 限定UP角：【${upCharacter.name}】降臨！！</span>`;
+                } else {
+                    // 小保底：50%機率中UP，50%機率歪常駐
+                    if (Math.random() <= 0.5) {
+                        addCharacter(upCharacter);
+                        return `<span class="ssr-text">✨✨【金色流星！50%命中】★5 限定UP角：【${upCharacter.name}】！！</span>`;
+                    } else {
+                        isGuaranteed = true; // 下次必中大保底
+                        let loser = permanentSsrPool[Math.floor(Math.random() * permanentSsrPool.length)];
+                        addCharacter(loser);
+                        return `<span class="ssr-text">💀【小保底歪了！】★5 常駐角色：【${loser.name}】（下次躍遷必定觸發大保底！）</span>`;
+                    }
+                }
+            }
+            if (roll <= 6.3) {
+                let pulled = srPool[Math.floor(Math.random() * srPool.length)];
+                addCharacter(pulled);
+                return `<span class="sr-text">⭐【紫色極光】★4 角色：【${pulled.name}】</span>`;
+            }
+            return `🟦【藍天白雲】三星光錐武器...`;
+        }
+
+        function addCharacter(blueprint) {
+            let found = playerInventory.find(c => c.name === blueprint.name);
+            if (found) {
+                if (found.constellation < 6) {
+                    found.constellation++;
+                    found.atk = Math.floor(found.atk * 1.15);
+                }
+            } else {
+                playerInventory.push({
+                    ...blueprint,
+                    level: 1, constellation: 0, energy: 0, maxEnergy: 100
+                });
+            }
+        }
+
+        function doWarp(times) {
+            let out = [];
+            for(let i=0; i<times; i++) out.push(`[${i+1}] ${rollGacha()}`);
+            document.getElementById('gacha-output').innerHTML = out.join('<br>');
+            updateTopStatus();
+        }
+
+        function renderInventory() {
+            let container = document.getElementById('inventory-output');
+            if (playerInventory.length === 0) {
+                container.innerHTML = "<p>隊伍裡目前空無一人，先去躍遷抽取吧！</p>";
+                return;
+            }
+            container.innerHTML = playerInventory.map(c => `
+                <div class="char-card ${c.rarity}">
+                    <div class="img-slot">
+                        <img src="${c.img}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span style="display:none;">${c.name}</span>
+                    </div>
+                    <strong>${c.name}</strong><br>
+                    <span>稀有度: ${c.rarity}</span><br>
+                    <span>等級: Lv.${c.level} (C${c.constellation})</span>
+                </div>
+            `).join('');
+        }
+
+        // 🛠️ 【Bug 已修復】：將原本字串中錯誤的 $ {c.level} 修正為 ${c.level}
+        function initBattleSelect() {
+            document.getElementById('battle-setup').style.display = 'block';
+            document.getElementById('battle-core').style.display = 'none';
+            let charSelect = document.getElementById('char-select');
+            if (playerInventory.length === 0) {
+                charSelect.innerHTML = "<option value=''>-- 還沒有解鎖任何角色 --</option>";
+                return;
+            }
+            charSelect.innerHTML = playerInventory.map((c, idx) => `
+                <option value="${idx}">${c.name} (Lv.${c.level})</option>
+            `).join('');
+        }
+
+        function startBattleGame() {
+            if (playerInventory.length === 0) return alert("請先召喚一些角色再進行開戰！");
+            let charIdx = document.getElementById('char-select').value;
+            activeChar = { ...playerInventory[charIdx] };
+            activeChar.energy = 0;
+
+            let stage = document.getElementById('stage-select').value;
+            // 🎯 多樣化強敵怪物資料庫實裝
+            if (stage === 'easy') activeEnemy = { name: "虛卒・踐踏者", hp: 700, maxHp: 700, atk: 50, img: "void.png" };
+            else if (stage === 'medium') activeEnemy = { name: "熾燃徘徊者", hp: 1500, maxHp: 1500, atk: 85, img: "prowler.png" };
+            else if (stage === 'gepard') activeEnemy = { name: "銀鬃鐵衛・杰帕德", hp: 2600, maxHp: 2600, atk: 75, img: "gepard.png" };
+            else if (stage === 'kafka') activeEnemy = { name: "星核獵手・卡芙卡", hp: 1800, maxHp: 1800, atk: 165, img: "kafka.png" };
+            else activeEnemy = { name: "末日獸・碎星結晶", hp: 3500, maxHp: 3500, atk: 150, img: "beast.png" };
+
+            document.getElementById('p-name').innerText = activeChar.name;
+            document.getElementById('p-img-slot').innerHTML = `<img src="${activeChar.img}" onerror="this.parentNode.innerHTML='<span>${activeChar.name}<br>大立繪</span>'">`;
+            
+            document.getElementById('e-name').innerText = activeEnemy.name;
+            document.getElementById('e-img-slot').innerHTML = `<img src="${activeEnemy.img}" onerror="this.parentNode.innerHTML='<span>${activeEnemy.name}<br>強敵圖</span>'">`;
+
+            document.getElementById('battle-setup').style.display = 'none';
+            document.getElementById('battle-core').style.display = 'block';
+            document.getElementById('battle-log-text').innerText = "開戰！請下達第一個指令。";
+            
+            syncBattleUI();
+        }
+
+        function syncBattleUI() {
+            let pHpPct = (activeChar.hp / activeChar.maxHp) * 100;
+            document.getElementById('p-hp-bar').style.width = `${pHpPct}%`;
+            document.getElementById('p-hp-text').innerText = `${activeChar.hp}/${activeChar.maxHp}`;
+            
+            let pEgyPct = (activeChar.energy / activeChar.maxEnergy) * 100;
+            document.getElementById('p-energy-bar').style.width = `${pEgyPct}%`;
+            document.getElementById('p-energy-text').innerText = `能量: ${activeChar.energy}/${activeChar.maxEnergy}`;
+
+            let eHpPct = (activeEnemy.hp / activeEnemy.maxHp) * 100;
+            document.getElementById('e-hp-bar').style.width = `${eHpPct}%`;
+            document.getElementById('e-hp-text').innerText = `${activeEnemy.hp}/${activeEnemy.maxHp}`;
+
+            document.getElementById('btn-skill').disabled = (currentSP <= 0);
+            document.getElementById('btn-ult').disabled = (activeChar.energy < activeChar.maxEnergy);
+            
+            updateTopStatus();
+        }
+
+        function triggerMoveAnimation(isPlayerAttacking) {
+            let pBox = document.getElementById('player-unit-box');
+            let eBox = document.getElementById('enemy-unit-box');
+
+            if (isPlayerAttacking) {
+                pBox.classList.add('p-attack-move');
+                setTimeout(() => { eBox.classList.add('hurt-flash'); }, 100);
+                setTimeout(() => {
+                    pBox.classList.remove('p-attack-move');
+                    eBox.classList.remove('hurt-flash');
+                }, 250);
+            } else {
+                eBox.classList.add('e-attack-move');
+                setTimeout(() => { pBox.classList.add('hurt-flash'); }, 100);
+                setTimeout(() => {
+                    eBox.classList.remove('e-attack-move');
+                    pBox.classList.remove('hurt-flash');
+                }, 250);
+            }
+        }
+
+        function executeAction(type) {
+            let dmg = 0;
+            let log = "";
+
+            if (type === 'atk') {
+                triggerMoveAnimation(true);
+                dmg = activeChar.atk;
+                if(currentSP < maxSP) currentSP++;
+                activeChar.energy = Math.min(activeChar.maxEnergy, activeChar.energy + 20);
+                log = `你施展普攻！突進衝撞對手造成 ${dmg} 點傷害。SP+1，能量+20。`;
+            } 
+            else if (type === 'skill') {
+                if (currentSP <= 0) return;
+                triggerMoveAnimation(true);
+                dmg = Math.floor(activeChar.atk * 1.75);
+                currentSP--;
+                activeChar.energy = Math.min(activeChar.maxEnergy, activeChar.energy + 30);
+                log = `你消耗戰技點爆發重擊！震撼敵方造成 ${dmg} 點重傷！SP-1，能量+30。`;
+            } 
+            else if (type === 'ult') {
+                if (activeChar.energy < activeChar.maxEnergy) return;
+                activeChar.energy = 0;
+                
+                let overlay = document.getElementById('ult-overlay');
+                overlay.innerText = `⚡ ${activeChar.name} ── 終結技奧義狂轟！ ⚡`;
+                overlay.style.display = 'flex';
+                
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    document.getElementById('enemy-unit-box').classList.add('hurt-flash');
+                    
+                    dmg = Math.floor(activeChar.atk * 3.8);
+                    if(Math.random() <= activeChar.critRate) {
+                        dmg = Math.floor(dmg * activeChar.critDmge);
+                        log = `💥💥【極限暴擊！】${activeChar.name} 傾瀉必殺終結技！核爆對手造成 ${dmg} 點毀滅性傷害！`;
+                    } else {
+                        log = `✨ ${activeChar.name} 釋放必殺終結技！全力轟炸造成 ${dmg} 點鉅額傷害！`;
+                    }
+                    
+                    activeEnemy.hp = Math.max(0, activeEnemy.hp - dmg);
+                    document.getElementById('battle-log-text').innerText = log;
+                    syncBattleUI();
+                    
+                    setTimeout(() => { document.getElementById('enemy-unit-box').classList.remove('hurt-flash'); }, 150);
+                    checkBattleStatus();
+                }, 1100);
+                return;
+            }
+
+            if (type !== 'ult' && Math.random() <= activeChar.critRate) {
+                dmg = Math.floor(dmg * activeChar.critDmge);
+                log += " 🔥 (CRITICAL 暴擊!)";
+            }
+
+            activeEnemy.hp = Math.max(0, activeEnemy.hp - dmg);
+            document.getElementById('battle-log-text').innerText = log;
+            syncBattleUI();
+
+            if (checkBattleStatus()) return;
+
+            document.querySelectorAll('.battle-actions button').forEach(b => b.disabled = true);
+            setTimeout(() => {
+                if (activeEnemy.hp <= 0) return;
+                
+                triggerMoveAnimation(false);
+                activeChar.hp = Math.max(0, activeChar.hp - activeEnemy.atk);
+                document.getElementById('battle-log-text').innerText = `👹 對方回合！ ${activeEnemy.name} 強力突襲，衝撞了你並造成 ${activeEnemy.atk} 點傷害！`;
+                
+                syncBattleUI();
+                document.querySelectorAll('.battle-actions button').forEach(b => b.disabled = false);
+                checkBattleStatus();
+            }, 1000);
+        }
+
+        function checkBattleStatus() {
+            if (activeEnemy.hp <= 0) {
+                alert(`🎉 凱旋歸來！成功討伐了 ${activeEnemy.name}！`);
+                let charInInv = playerInventory.find(c => c.name === activeChar.name);
+                if (charInInv && charInInv.level < 80) {
+                    charInInv.level++;
+                    charInInv.maxHp += 110;
+                    charInInv.atk += 22;
+                    alert(`🆙 突破極限！ ${charInInv.name} 升級到了 Lv.${charInInv.level}！`);
+                }
+                initBattleSelect();
+                return true;
+            }
+            if (activeChar.hp <= 0) {
+                alert(`💀 挑戰失敗... 戰隊成員已力竭。`);
+                initBattleSelect();
+                return true;
+            }
+            return false;
+        }
+
+        updateTopStatus();
+    </script>
+</body>
+</html>
